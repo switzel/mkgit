@@ -1,0 +1,11 @@
+hostname = 'myhost'
+port = 8080
+path = '/path/to/temporary/repository'
+
+mailfrom = 'mymailaccount@myprovider.com'
+mailto = 'me@somewhere;sombody_else@somewhereelse'
+mailserver = 'mail.myprovider.com'
+mailport = 587
+mailuser = 'mymailaccount'
+mailpasswd = 'mymailpassword'
+
