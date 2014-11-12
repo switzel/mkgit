@@ -2,6 +2,7 @@
 
 import os
 import sys
+import signal
 import shutil
 import smtplib
 import email.utils, email.mime.multipart, email.mime.application, email.mime.text
@@ -60,6 +61,8 @@ class SimplePostHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", 'text/plain')
         self.end_headers()
+
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
 def basename(remote):
     return remote[remote.rfind('/')+1:-4]
