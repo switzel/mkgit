@@ -24,7 +24,7 @@ port = mkgit_conf.port
 path = mkgit_conf.path
 mailfrom = mkgit_conf.mailfrom
 mailto = mkgit_conf.mailto
-mailtos = mailto.split(';')
+mailtos = [x.strip(' ') for x in mailto.split(';')]
 mailserver = mkgit_conf.mailserver
 mailport = mkgit_conf.mailport
 mailuser = mkgit_conf.mailuser
@@ -38,7 +38,7 @@ class SimplePostHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.send_head()
-        self.wfile.write('Nothing happened.')
+        self.wfile.write('Nothing happens.')
 
     def do_POST(self):
         self.send_head()
@@ -70,6 +70,13 @@ def make(remote):
     os.chdir(path)
     os.system('make')
 
+def make_diff(remote, revision):
+    bname = basename(remote)
+    os.chdir(path)
+    os.system('latexdiff-git --pdf --rev %s %s.tex' % (revision, bname))
+    os.rename('%s-diff%s.pdf' % (bname, revision), '%s-diff.pdf' % bname)
+    
+
 def cleanup():
     shutil.rmtree(path)
 
@@ -84,6 +91,12 @@ def send(remote, message):
     pdf = open('%s/%s.pdf' % (path, basename(remote)), 'rb')
     msg = email.mime.application.MIMEApplication(pdf.read(), _subtype = 'pdf')
     pdf.close()
+    msg.add_header('Content-Disposition', 'attachment', filename=basename(remote) + '.pdf')
+    outer.attach(msg)
+    diff = open('%s/%s-diff.pdf' % (path, basename(remote)), 'rb')
+    msg = email.mime.application.MIMEApplication(diff.read(), _subtype = 'pdf')
+    pdf.close()
+    msg.add_header('Content-Disposition', 'attachment', filename=basename(remote) + '-diff.pdf')
     outer.attach(msg)
     mailtext = outer.as_string()
     print('Sending mail...')
@@ -100,8 +113,10 @@ def send(remote, message):
 def post(form):
     if os.fork() != 0:
         return 'Done.'
+    print(form)
     message = ''
     repository = form['repository']
+    before = form['before']
     remote = repository['url']
     commits = form['commits']
     message = 'The repository\n\n%s\n\nreceived the following commits:\n' % remote
@@ -112,8 +127,10 @@ def post(form):
              commit['timestamp'],
              commit['author']['name'],
              commit['author']['email'])
+        message += '-'*80
     message += '\nThe current pdf file is attached.'
     make(remote)
+    make_diff(remote,before)
     send(remote, message)
     cleanup()
     sys.exit(0)
