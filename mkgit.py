@@ -7,7 +7,6 @@ import smtplib
 import email.utils, email.mime.multipart, email.mime.application, email.mime.text
 import SimpleHTTPServer
 import SocketServer
-from SimplePostHandler import SimplePostHandler
 import urlparse
 import simplejson
 import posixpath
@@ -113,7 +112,6 @@ def send(remote, message):
 def post(form):
     if os.fork() != 0:
         return 'Done.'
-    print(form)
     message = ''
     repository = form['repository']
     before = form['before']
@@ -133,7 +131,7 @@ def post(form):
     make_diff(remote,before)
     send(remote, message)
     cleanup()
-    sys.exit(0)
+    os._exit(0)
 
 httpd = SocketServer.TCPServer((hostname, port), SimplePostHandler)
 httpd.serve_forever()
