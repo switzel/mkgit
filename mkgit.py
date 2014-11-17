@@ -22,6 +22,7 @@ import mkgit_conf
 hostname = mkgit_conf.hostname
 port = mkgit_conf.port
 path = mkgit_conf.path
+repos_whitelist = mkgit_conf.repos_whitelist
 mailfrom = mkgit_conf.mailfrom
 mailto = mkgit_conf.mailto
 mailtos = [x.strip(' ') for x in mailto.split(';')]
@@ -115,10 +116,15 @@ def send(remote, message):
 def post(form):
     if os.fork() != 0:
         return 'Done.'
-    message = ''
     repository = form['repository']
-    before = form['before']
     remote = repository['url']
+    for white_repos in repos_whitelist:
+        if remote.startswith(white_repos):
+            break
+    else:
+        return 'Done.'
+    message = ''
+    before = form['before']
     commits = form['commits']
     message = 'The repository\n\n%s\n\nreceived the following commits:\n' % remote
     for commit in commits:
